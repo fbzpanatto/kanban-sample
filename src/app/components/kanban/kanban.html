@@ -1,0 +1,59 @@
+<section class="kanban-board">
+  @if (errorMessage(); as message) {
+    <div class="kanban-board__error" role="alert">
+      {{ message }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="kanban-board__loading">Carregando quadro...</div>
+  } @else {
+    <div class="kanban-board__columns">
+      @for (column of columns(); track trackByStageId($index, column)) {
+        <div class="kanban-column">
+          <header class="kanban-column__header">
+            <h2 class="kanban-column__title">{{ column.stage.name }}</h2>
+            <span class="kanban-column__count">{{ column.students.length }}</span>
+          </header>
+
+          <div
+            class="kanban-column__list"
+            cdkDropList
+            [id]="getColumnListId(column.stage.id)"
+            [cdkDropListData]="column.students"
+            [cdkDropListConnectedTo]="connectedColumnIds()"
+            (cdkDropListDropped)="onDrop($event, column.stage)"
+          >
+            @for (student of column.students; track trackByStudentId($index, student)) {
+              <article
+                class="student-card"
+                cdkDrag
+                [cdkDragData]="student"
+                (click)="onCardClick(student)"
+              >
+                <div class="student-card__avatar">
+                  @if (student.avatarUrl) {
+                    <img [src]="student.avatarUrl" [alt]="student.name" />
+                  } @else {
+                    <span class="student-card__avatar-fallback">
+                      {{ student.name.charAt(0) }}
+                    </span>
+                  }
+                </div>
+
+                <div class="student-card__info">
+                  <span class="student-card__name">{{ student.name }}</span>
+                  @if (student.className) {
+                    <span class="student-card__meta">{{ student.className }}</span>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <p class="kanban-column__empty">Nenhum aluno nesta etapa</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
