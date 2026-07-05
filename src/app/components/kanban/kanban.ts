@@ -20,7 +20,7 @@ interface ColumnViewModel {
 export class KanbanBoardComponent implements OnInit {
   private readonly kanbanService = inject(FetchData);
 
-  // --- Estado do componente (signals) ---
+  // --- Estado do componente (signals) --
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly columns = signal<ColumnViewModel[]>([]);
