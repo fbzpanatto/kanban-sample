@@ -13,7 +13,7 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class FetchData {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/kanban`;
+  private readonly baseUrl = `${environment.apiUrl}/`;
 
   /**
    * Busca as etapas (colunas) cadastradas.
@@ -77,7 +77,7 @@ export class FetchData {
    */
   private handleError(context: string) {
     return (error: unknown): Observable<never> => {
-      console.error(`[KanbanService] ${context}`, error);
+      console.error(`[FetchData] ${context}`, error);
       return throwError(() => new Error(context));
     };
   }
