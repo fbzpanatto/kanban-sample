@@ -9,9 +9,7 @@
   </header>
 
   @if (errorMessage(); as message) {
-    <div class="kanban-board__error" role="alert">
-      {{ message }}
-    </div>
+    <div class="kanban-board__error" role="alert">{{ message }}</div>
   }
 
   @if (loading()) {

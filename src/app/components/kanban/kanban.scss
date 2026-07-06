@@ -1,11 +1,4 @@
 :host {
-  --color-canvas: #f5f3ee;
-  --color-surface: #ffffff;
-  --color-ink: #23262b;
-  --color-ink-soft: #6b6e75;
-  --color-accent: #3d5a80;
-  --color-accent-soft: rgba(61, 90, 128, 0.12);
-  --color-border: #e3e0da;
 
   display: block;
   height: 100vh;
@@ -35,7 +28,7 @@
 }
 
 .kanban-toolbar__summary {
-  margin: 10px 0 0;
+  margin: 10px 0;
   font-size: 13px;
   color: var(--color-ink-soft);
 }

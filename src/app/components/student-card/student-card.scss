@@ -67,3 +67,22 @@
   font-size: 11px;
   color: var(--color-ink-soft);
 }
+
+.student-card__action-btn {
+  margin-left: auto; // Empurra o botão todo para a direita
+  background: none;
+  border: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  padding: 6px; // Área de clique confortável
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-border);
+    color: var(--color-ink);
+  }
+}

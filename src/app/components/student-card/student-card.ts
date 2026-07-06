@@ -22,8 +22,7 @@ import { Student } from "../../interface/interfaces";
   styleUrl: './student-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'student-card',
-    '(click)': 'onClick()'
+    class: 'student-card'
   }
 })
 export class StudentCard {

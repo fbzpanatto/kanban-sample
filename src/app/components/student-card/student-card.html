@@ -12,3 +12,16 @@
     <span class="student-card__meta">{{ student().className }}</span>
   }
 </div>
+
+<button
+  type="button"
+  class="student-card__action-btn"
+  (click)="onClick()"
+  aria-label="Abrir detalhes do aluno"
+>
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="1"></circle>
+    <circle cx="12" cy="5" r="1"></circle>
+    <circle cx="12" cy="19" r="1"></circle>
+  </svg>
+</button>

@@ -7,6 +7,7 @@ import { FetchData } from '../../services/fetch-data';
 import { Stage, Student } from '../../interface/interfaces';
 import { StudentCard } from '../student-card/student-card';
 import { Filters } from "../filters/filters";
+import { Router } from "@angular/router";
 
 interface ColumnViewModel { stage: Stage, students: Student[] }
 
@@ -19,6 +20,8 @@ interface ColumnViewModel { stage: Stage, students: Student[] }
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent implements OnInit {
+
+  private readonly router = inject(Router);
   private readonly kanbanService = inject(FetchData);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -100,8 +103,7 @@ export class KanbanBoardComponent implements OnInit {
   }
 
   protected onCardClick(student: Student): void {
-    console.log('Abrir detalhes do aluno:', student.id);
-    // TODO: navegar para rota de detalhes ou abrir modal (fora do escopo desta fase)
+    this.router.navigate(['students', student.id, 'details']).then(_ => null);
   }
 
   private persistStageChange(student: Student, targetStage: Stage): void {

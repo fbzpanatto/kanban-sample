@@ -1,0 +1,78 @@
+<section class="details-page">
+  <header class="details-page__header">
+    <button class="details-page__back-btn" (click)="goBack()">
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+        <path d="M15 18l-6-6 6-6"></path>
+      </svg>
+      Voltar para o Quadro
+    </button>
+    <div class="details-page__breadcrumb">
+      Alunos / Etapa / Detalhes do Aluno #{{ studentId() }}
+    </div>
+  </header>
+
+  <div class="details-page__body">
+    <aside class="details-page__sidebar">
+      <div class="details-page__avatar-placeholder">
+        <span>Avatar</span>
+      </div>
+      <h2 class="details-page__name">Nome do Aluno</h2>
+      <p class="details-page__meta">Turma A • Em Produção</p>
+
+      <div class="details-page__sidebar-info">
+        <div class="info-group">
+          <span>Telefone</span>
+          <p>(00) 00000-0000</p>
+        </div>
+        <div class="info-group">
+          <span>Email</span>
+          <p>aluno&#64;exemplo.com</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="details-page__main">
+      <nav class="details-page__tabs">
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            class="details-page__tab-btn"
+            [class.active]="activeTab() === tab.id"
+            (click)="setTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </nav>
+
+      <div class="details-page__content">
+        @switch (activeTab()) {
+          @case ('dados') {
+            <div class="generic-panel">
+              <h3>Dados Cadastrais</h3>
+              <p>Formulário de endereço, dados de cobrança, etc.</p>
+            </div>
+          }
+          @case ('pecas') {
+            <div class="generic-panel">
+              <h3>Peças em Produção</h3>
+              <p>Galeria para upload das fotos das roupas feitas pelo aluno.</p>
+            </div>
+          }
+          @case ('validacao') {
+            <div class="generic-panel">
+              <h3>Área de Validação</h3>
+              <p>Comparação com fotos do modelo original e botão de aprovação.</p>
+            </div>
+          }
+          @default {
+            <div class="generic-panel">
+              <h3>{{ activeTab() }}</h3>
+              <p>Conteúdo em construção...</p>
+            </div>
+          }
+        }
+      </div>
+    </main>
+  </div>
+</section>

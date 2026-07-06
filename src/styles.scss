@@ -1,4 +1,12 @@
-// styles.scss (global)
+:root {
+  --color-canvas: #f5f3ee;
+  --color-surface: #ffffff;
+  --color-ink: #23262b;
+  --color-ink-soft: #6b6e75;
+  --color-accent: #3d5a80;
+  --color-accent-soft: rgba(61, 90, 128, 0.12);
+  --color-border: #e3e0da;
+}
 
 * {
   box-sizing: border-box;
