@@ -1,4 +1,36 @@
 <section class="kanban-board">
+  <header class="kanban-toolbar">
+    <div class="kanban-toolbar__filters">
+      <div class="kanban-toolbar__search">
+        <svg class="kanban-toolbar__search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+          <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <input
+          type="text"
+          class="kanban-toolbar__search-input"
+          placeholder="Buscar aluno por nome..."
+          [formControl]="searchControl"
+        />
+      </div>
+
+      <!--
+        Botões abaixo são apenas visuais por enquanto (sem lógica),
+        conforme definido: o comportamento de cada filtro será
+        especificado com o cliente mais adiante.
+      -->
+      <button class="kanban-toolbar__filter-btn" type="button">Data</button>
+      <button class="kanban-toolbar__filter-btn" type="button">Campos</button>
+      <button class="kanban-toolbar__filter-btn" type="button">Tags</button>
+      <button class="kanban-toolbar__filter-btn" type="button">Status</button>
+      <button class="kanban-toolbar__filter-btn" type="button">Mais filtros</button>
+    </div>
+
+    <p class="kanban-toolbar__summary">
+      {{ totalStudentsCount() }} {{ totalStudentsCount() === 1 ? 'aluno' : 'alunos' }} no quadro
+    </p>
+  </header>
+
   @if (errorMessage(); as message) {
     <div class="kanban-board__error" role="alert">
       {{ message }}
@@ -25,29 +57,12 @@
             (cdkDropListDropped)="onDrop($event, column.stage)"
           >
             @for (student of column.students; track trackByStudentId($index, student)) {
-              <article
-                class="student-card"
+              <app-student-card
                 cdkDrag
                 [cdkDragData]="student"
-                (click)="onCardClick(student)"
-              >
-                <div class="student-card__avatar">
-                  @if (student.avatarUrl) {
-                    <img [src]="student.avatarUrl" [alt]="student.name" />
-                  } @else {
-                    <span class="student-card__avatar-fallback">
-                      {{ student.name.charAt(0) }}
-                    </span>
-                  }
-                </div>
-
-                <div class="student-card__info">
-                  <span class="student-card__name">{{ student.name }}</span>
-                  @if (student.className) {
-                    <span class="student-card__meta">{{ student.className }}</span>
-                  }
-                </div>
-              </article>
+                [student]="student"
+                (cardClick)="onCardClick($event)"
+              />
             } @empty {
               <p class="kanban-column__empty">Nenhum aluno nesta etapa</p>
             }

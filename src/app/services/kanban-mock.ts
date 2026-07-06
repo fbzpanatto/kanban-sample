@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { Stage, Student, UpdateStagePayload } from "../interface/interfaces";
+import { Stage, Student, UpdateStagePayload } from '../interface/interfaces';
 
 /**
  * Versão "mockada" do KanbanService, usada enquanto o backend Node/Express
@@ -110,5 +110,23 @@ export class KanbanMock {
     );
 
     return of(undefined).pipe(delay(this.SIMULATED_LATENCY_MS));
+  }
+
+  /**
+   * Mesma assinatura do KanbanService real — a diferença é que aqui o
+   * filtro acontece em memória (Array.filter) em vez de um WHERE no MySQL.
+   * Quando o backend estiver pronto, basta trocar o provider (ver
+   * app.config.ts) e o componente não muda absolutamente nada.
+   */
+  searchStudents(term: string): Observable<Student[]> {
+    const normalizedTerm = term.trim().toLowerCase();
+
+    const results = normalizedTerm
+      ? this.mockStudents.filter((student) =>
+        student.name.toLowerCase().includes(normalizedTerm)
+      )
+      : this.mockStudents;
+
+    return of([...results]).pipe(delay(this.SIMULATED_LATENCY_MS));
   }
 }

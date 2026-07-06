@@ -36,6 +36,76 @@
   flex-shrink: 0;
 }
 
+// --- Toolbar: busca + filtros visuais + totalizador ---
+
+.kanban-toolbar {
+  flex-shrink: 0; // nunca deixa a toolbar encolher e "roubar" espaço das colunas
+  margin-bottom: 16px;
+}
+
+.kanban-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kanban-toolbar__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 260px;
+  flex: 1 1 260px;
+}
+
+.kanban-toolbar__search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-soft);
+  flex-shrink: 0;
+}
+
+.kanban-toolbar__search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-ink);
+  width: 100%;
+
+  &::placeholder {
+    color: var(--color-ink-soft);
+  }
+}
+
+.kanban-toolbar__filter-btn {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+.kanban-toolbar__summary {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+}
+
 .kanban-board__loading {
   margin: auto;
   color: var(--color-ink-soft);
@@ -109,66 +179,6 @@
   margin-top: 24px;
 }
 
-.student-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background-color: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  cursor: grab;
-  transition: box-shadow 0.15s ease;
-
-  &:hover {
-    box-shadow: 0 2px 8px rgba(35, 38, 43, 0.08);
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.student-card__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  background-color: var(--color-accent-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-.student-card__avatar-fallback {
-  color: var(--color-accent);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.student-card__info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.student-card__name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.student-card__meta {
-  font-size: 11px;
-  color: var(--color-ink-soft);
-}
+// Estilos do cartão do aluno (.student-card e derivados) foram movidos
+// para student-card.component.scss — o board agora só cuida do layout
+// das colunas, não da aparência do cartão em si.

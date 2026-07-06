@@ -1,9 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { FetchData } from "../../services/fetch-data";
+import { catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
+import { FetchData } from '../../services/fetch-data';
 import { Stage, Student } from '../../interface/interfaces';
+import { StudentCard } from '../student-card/student-card';
 
+/**
+ * Modelo de visualização: uma etapa (coluna) já com a lista de alunos
+ * que pertencem a ela. É o formato que o template consome diretamente.
+ */
 interface ColumnViewModel {
   stage: Stage;
   students: Student[];
@@ -12,18 +19,34 @@ interface ColumnViewModel {
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [DragDropModule, ReactiveFormsModule, StudentCard],
   templateUrl: './kanban.html',
   styleUrl: './kanban.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent implements OnInit {
   private readonly kanbanService = inject(FetchData);
+  private readonly destroyRef = inject(DestroyRef);
 
-  // --- Estado do componente (signals) --
+  // --- Estado do componente (signals) ---
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly columns = signal<ColumnViewModel[]>([]);
+
+  /**
+   * Totalizador exibido no topo do quadro (equivalente ao "34 oportunidades
+   * de Negócio" do modelo de referência). É definido UMA vez, na carga
+   * inicial, e não muda quando o usuário filtra por nome — representa o
+   * total real de alunos no quadro, não o resultado da busca.
+   */
+  protected readonly totalStudentsCount = signal(0);
+
+  /**
+   * Campo de busca por nome. `nonNullable: true` evita que o valor seja
+   * `string | null` — o FormControl sempre terá uma string (mesmo que
+   * vazia), o que simplifica a tipagem no restante do fluxo.
+   */
+  protected readonly searchControl = new FormControl('', { nonNullable: true });
 
   /**
    * IDs das listas conectadas para o CDK Drag & Drop.
@@ -36,6 +59,58 @@ export class KanbanBoardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBoard();
+    this.watchSearchTerm();
+  }
+
+  /**
+   * Observa o campo de busca e dispara `searchStudents` no service sempre
+   * que o termo "assentar" por 400ms (debounceTime) e for realmente
+   * diferente do último termo buscado (distinctUntilChanged) — evita
+   * requisição a cada tecla digitada e evita repetir a mesma busca (ex:
+   * usuário digita e apaga rápido, voltando ao mesmo texto).
+   *
+   * `switchMap` cancela automaticamente uma busca anterior ainda em voo
+   * se o usuário digitar de novo antes dela responder — evita que uma
+   * resposta antiga e mais lenta chegue depois e sobrescreva um
+   * resultado mais recente (race condition clássica de autocomplete).
+   */
+  private watchSearchTerm(): void {
+    this.searchControl.valueChanges
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap((term) =>
+          this.kanbanService.searchStudents(term).pipe(
+            catchError(() => {
+              // Importante: o catchError fica AQUI DENTRO do switchMap,
+              // isolado por busca. Se ficasse fora (no pipe externo),
+              // um único erro encerraria o Observable de valueChanges
+              // inteiro, e a busca pararia de responder pelo resto da
+              // sessão do usuário.
+              this.errorMessage.set('Não foi possível buscar os alunos.');
+              return of<Student[]>([]);
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((students) => this.rebuildColumns(students));
+  }
+
+  /**
+   * Reagrupa os alunos retornados pela busca dentro das colunas/etapas já
+   * carregadas. Reaproveita os objetos `Stage` que já estão em `columns()`
+   * em vez de manter uma lista de estágios duplicada em outro signal.
+   */
+  private rebuildColumns(students: Student[]): void {
+    const stages = this.columns().map((column) => column.stage);
+
+    this.columns.set(
+      stages.map((stage) => ({
+        stage,
+        students: students.filter((student) => student.stageId === stage.id)
+      }))
+    );
   }
 
   protected getColumnListId(stageId: number): string {
@@ -148,6 +223,7 @@ export class KanbanBoardComponent implements OnInit {
             students: students.filter((student) => student.stageId === stage.id)
           }))
         );
+        this.totalStudentsCount.set(students.length);
         this.loading.set(false);
       },
       error: () => {

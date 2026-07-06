@@ -1,0 +1,14 @@
+<div class="student-card__avatar">
+  @if (student().avatarUrl) {
+    <img [src]="student().avatarUrl" [alt]="student().name" />
+  } @else {
+    <span class="student-card__avatar-fallback">{{ getInitial() }}</span>
+  }
+</div>
+
+<div class="student-card__info">
+  <span class="student-card__name">{{ student().name }}</span>
+  @if (student().className) {
+    <span class="student-card__meta">{{ student().className }}</span>
+  }
+</div>

@@ -1,11 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
-
-import { environment } from '../../environments/environment';
-
 import { Stage, Student, UpdateStagePayload } from '../interface/interfaces';
-
+import { environment } from '../../environments/environment';
 
 /**
  * Service responsável por toda a comunicação com o backend Node/Express
@@ -52,6 +49,25 @@ export class FetchData {
         newStageId: payload.newStageId
       })
       .pipe(catchError(this.handleError('Erro ao atualizar a etapa do aluno')));
+  }
+
+  /**
+   * Busca alunos filtrando por nome. O componente chama este método
+   * já com debounce + distinctUntilChanged aplicados (ver KanbanBoardComponent),
+   * então cada chamada aqui já representa um termo "estável" digitado
+   * pelo usuário — não precisamos nos preocupar com throttling aqui.
+   *
+   * Endpoint sugerido: GET /kanban/students?search=termo
+   * No backend, este filtro deve virar um WHERE name LIKE ? parametrizado
+   * (nunca concatenar o termo diretamente na query, por segurança contra
+   * SQL Injection).
+   */
+  searchStudents(term: string): Observable<Student[]> {
+    const params = new HttpParams().set('search', term.trim());
+
+    return this.http
+      .get<Student[]>(`${this.baseUrl}/students`, { params })
+      .pipe(catchError(this.handleError('Erro ao buscar alunos')));
   }
 
   /**
