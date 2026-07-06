@@ -1,0 +1,67 @@
+// --- Toolbar: busca + filtros visuais ---
+
+:host {
+  display: block;
+}
+
+.kanban-toolbar {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.kanban-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kanban-toolbar__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 260px;
+  flex: 1 1 260px;
+}
+
+.kanban-toolbar__search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-soft);
+  flex-shrink: 0;
+}
+
+.kanban-toolbar__search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-ink);
+  width: 100%;
+
+  &::placeholder {
+    color: var(--color-ink-soft);
+  }
+}
+
+.kanban-toolbar__filter-btn {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
