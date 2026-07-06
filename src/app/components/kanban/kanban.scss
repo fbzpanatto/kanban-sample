@@ -1,11 +1,7 @@
 :host {
-
   display: block;
-  height: 100vh;
+  height: 100%; /* Padronizado com o body */
   overflow: hidden;
-  background-color: var(--color-canvas);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  box-sizing: border-box;
 }
 
 .kanban-board {
@@ -13,7 +9,6 @@
   flex-direction: column;
   height: 100%;
   padding: 24px;
-  box-sizing: border-box;
 }
 
 .kanban-board__error {

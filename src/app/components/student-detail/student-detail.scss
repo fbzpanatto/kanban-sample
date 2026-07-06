@@ -1,8 +1,6 @@
 :host {
   display: block;
-  height: 100vh;
-  background-color: var(--color-canvas);
-  box-sizing: border-box;
+  height: 100%; /* Padronizado com o body */
 }
 
 .details-page {
@@ -49,7 +47,7 @@
 .details-page__body {
   display: flex;
   flex: 1;
-  min-height: 0; // Importante para scroll interno funcionar
+  min-height: 0;
 }
 
 .details-page__sidebar {
@@ -153,7 +151,7 @@
 .details-page__content {
   flex: 1;
   padding: 32px;
-  overflow-y: auto; // O conteúdo rola apenas aqui dentro
+  overflow-y: auto;
 }
 
 .generic-panel {

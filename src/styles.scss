@@ -18,6 +18,9 @@ html, body {
 
 body {
   margin: 0;
+  /* Fonte sans-serif declarada globalmente */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-canvas); /* Garantindo cor de fundo global */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
