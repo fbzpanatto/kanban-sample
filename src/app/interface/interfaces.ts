@@ -1,7 +1,26 @@
 /**
+ * Envelope padrão de resposta da API. Toda resposta deve trazer os dados
+ * dentro de `data` — isso permite que o FetchData trate qualquer resource
+ * de forma genérica, sem conhecer a forma exata de cada payload.
+ *
+ * No backend Express, isso significa que TODO endpoint (não só os do
+ * Kanban) deve responder no formato:
+ *   { "data": [...] }  ou  { "data": {...} }
+ * em vez de devolver o array/objeto cru direto.
+ */
+export interface ApiEnvelope<T> {
+  data: T;
+  error?: { message: string } | null;
+}
+
+/**
+ * Par chave/valor usado para montar querystrings dinâmicas via FetchData
+ * (?key=value&key2=value2...).
+ */
+export type QueryParam = Record<string, string | number | boolean>;
+
+/**
  * Representa uma etapa (coluna) do quadro de progresso.
- * Nesta fase do protótipo, as etapas podem vir fixas do frontend
- * ou de uma tabela simples no MySQL (ex: tabela `etapa_progresso`).
  */
 export interface Stage {
   id: number;
@@ -26,9 +45,23 @@ export interface Student {
 }
 
 /**
- * Payload enviado à API quando um aluno é movido de coluna via drag-and-drop.
+ * Corpo enviado ao mover um aluno entre colunas via drag-and-drop.
+ * O ID do aluno NÃO vai mais aqui — ele é o parâmetro `id` de
+ * FetchData.putById(resource, id, body, subResource).
+ *
+ * Ex: fetchData.putById<void>('/kanban/students', student.id, payload, 'stage')
  */
 export interface UpdateStagePayload {
-  studentId: number;
   newStageId: number;
+}
+
+/**
+ * Mensagem de texto registrada no painel "Apresentação Proposta" (aba
+ * Atividades do detalhe do aluno). Mantida aqui mesmo não estando em uso
+ * na versão atual do student-detail — sem custo mantê-la disponível.
+ */
+export interface ProposalMessage {
+  id: number;
+  text: string;
+  createdAt: string;
 }

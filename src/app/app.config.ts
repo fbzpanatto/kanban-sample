@@ -14,9 +14,6 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
-    {
-      provide: FetchData,
-      useClass: environment.useMockData ? KanbanMock : FetchData
-    }
+    { provide: FetchData, useClass: KanbanMock }
   ]
 };

@@ -1,84 +1,125 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
-import { Stage, Student, UpdateStagePayload } from '../interface/interfaces';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { ApiEnvelope, QueryParam } from '../interface/interfaces';
 import { environment } from '../../environments/environment';
 
 /**
- * Service responsável por toda a comunicação com o backend Node/Express
- * relacionada ao quadro Kanban. Mantemos a lógica de HTTP isolada do
- * componente para facilitar testes e reaproveitamento (ex: futura tela
- * de detalhes do aluno também poderá consumir este service).
+ * Client HTTP genérico: UM ÚNICO service para qualquer recurso da API,
+ * em vez de um método por domínio (getStages, getStudents, etc.). O
+ * endpoint ("resource") é passado por parâmetro em cada chamada.
+ *
+ * Espelha o padrão da sua aplicação final (getAll/getOne/saveData/
+ * putById/deleteData), sem LoadingService/DialogMessagesService/
+ * AuthService por enquanto — essas dependências fazem sentido na
+ * aplicação real, mas adicionariam complexidade desnecessária nesta fase
+ * de protótipo.
  */
 @Injectable({ providedIn: 'root' })
 export class FetchData {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/`;
+
+  // Fix: sem barra final — cada chamada já adiciona a própria barra
+  // (ex: `/stages`), evitando `apiUrl//stages`.
+  private readonly baseUrl = environment.apiUrl;
 
   /**
-   * Busca as etapas (colunas) cadastradas.
-   * Endpoint sugerido: GET /kanban/stages
+   * Monta a querystring a partir de um array de pares chave/valor.
+   * encodeURIComponent por segurança: evita que um valor com caracteres
+   * especiais quebre a URL ou vire um parâmetro não intencional.
    */
-  getStages(): Observable<Stage[]> {
-    return this.http
-      .get<Stage[]>(`${this.baseUrl}/stages`)
-      .pipe(catchError(this.handleError('Erro ao carregar as etapas do quadro')));
+  private buildQuery(query?: QueryParam[]): string {
+    if (!query || query.length === 0) {
+      return '';
+    }
+
+    const pairs = query
+      .map((param) =>
+        Object.entries(param).map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      )
+      .flat();
+
+    return pairs.length ? `?${pairs.join('&')}` : '';
   }
 
   /**
-   * Busca todos os alunos já com a etapa atual de cada um.
-   * O agrupamento por coluna é feito no frontend (ver KanbanBoardComponent).
-   * Endpoint sugerido: GET /kanban/students
+   * Busca uma coleção.
+   * Ex: getAll<Stage>('/kanban/stages')
+   * Ex. com busca: getAll<Student>('/kanban/students', [{ search: 'ana' }])
    */
-  getStudents(): Observable<Student[]> {
+  getAll<T>(resource: string, query?: QueryParam[]): Observable<T[]> {
+    const url = `${this.baseUrl}${resource}${this.buildQuery(query)}`;
+
     return this.http
-      .get<Student[]>(`${this.baseUrl}/students`)
-      .pipe(catchError(this.handleError('Erro ao carregar os alunos')));
+      .get<ApiEnvelope<T[]>>(url)
+      .pipe(map((response) => response.data), catchError(this.handleError(resource)));
   }
 
   /**
-   * Persiste a mudança de etapa de um aluno (drag-and-drop entre colunas).
-   * Endpoint sugerido: PATCH /kanban/students/:studentId/stage
-   *
-   * Importante: no backend, este UPDATE deve ser uma query parametrizada
-   * via mysql2 (nunca concatenar o stageId diretamente na query).
+   * Busca um único registro.
+   * Ex: getOne<Student>('/kanban/students', 101)
    */
-  updateStudentStage(payload: UpdateStagePayload): Observable<void> {
+  getOne<T>(resource: string, id: number | string, subResource?: string, query?: QueryParam[]): Observable<T> {
+    const path = `${resource}/${id}${subResource ? '/' + subResource : ''}`;
+    const url = `${this.baseUrl}${path}${this.buildQuery(query)}`;
+
     return this.http
-      .patch<void>(`${this.baseUrl}/students/${payload.studentId}/stage`, {
-        newStageId: payload.newStageId
-      })
-      .pipe(catchError(this.handleError('Erro ao atualizar a etapa do aluno')));
+      .get<ApiEnvelope<T>>(url)
+      .pipe(map((response) => response.data), catchError(this.handleError(resource)));
   }
 
   /**
-   * Busca alunos filtrando por nome. O componente chama este método
-   * já com debounce + distinctUntilChanged aplicados (ver KanbanBoardComponent),
-   * então cada chamada aqui já representa um termo "estável" digitado
-   * pelo usuário — não precisamos nos preocupar com throttling aqui.
-   *
-   * Endpoint sugerido: GET /kanban/students?search=termo
-   * No backend, este filtro deve virar um WHERE name LIKE ? parametrizado
-   * (nunca concatenar o termo diretamente na query, por segurança contra
-   * SQL Injection).
+   * Cria um novo registro.
+   * Ex: saveData<Student>('/kanban/students', novoAluno)
    */
-  searchStudents(term: string): Observable<Student[]> {
-    const params = new HttpParams().set('search', term.trim());
+  saveData<T>(resource: string, body: unknown): Observable<T> {
+    const url = `${this.baseUrl}${resource}`;
 
     return this.http
-      .get<Student[]>(`${this.baseUrl}/students`, { params })
-      .pipe(catchError(this.handleError('Erro ao buscar alunos')));
+      .post<ApiEnvelope<T>>(url, body)
+      .pipe(map((response) => response.data), catchError(this.handleError(resource)));
   }
 
   /**
-   * Centraliza o tratamento de erro das chamadas HTTP.
-   * Loga o erro original no console (útil em dev) e propaga uma mensagem
-   * amigável para a camada de apresentação decidir o que fazer.
+   * Atualiza um registro existente (total ou parcial).
+   * Ex: putById<void>('/kanban/students', 101, { newStageId: 3 }, 'stage')
+   *  -> PUT /kanban/students/101/stage
    */
-  private handleError(context: string) {
+  putById<T>(
+    resource: string,
+    id: number | string,
+    body: unknown,
+    subResource?: string,
+    query?: QueryParam[]
+  ): Observable<T> {
+    const path = `${resource}/${id}${subResource ? '/' + subResource : ''}`;
+    const url = `${this.baseUrl}${path}${this.buildQuery(query)}`;
+
+    return this.http
+      .put<ApiEnvelope<T>>(url, body)
+      .pipe(map((response) => response.data), catchError(this.handleError(resource)));
+  }
+
+  /**
+   * Remove um registro (ou coleção filtrada por query).
+   */
+  deleteData<T>(resource: string, query?: QueryParam[]): Observable<T> {
+    const url = `${this.baseUrl}${resource}${this.buildQuery(query)}`;
+
+    return this.http
+      .delete<ApiEnvelope<T>>(url)
+      .pipe(map((response) => response.data), catchError(this.handleError(resource)));
+  }
+
+  /**
+   * Tratamento de erro centralizado — sem dialog/auth por enquanto.
+   * Loga o erro original (útil em dev) e propaga uma mensagem amigável;
+   * o componente decide como exibi-la (ex: this.errorMessage.set(...)).
+   */
+  private handleError(resource: string) {
     return (error: unknown): Observable<never> => {
-      console.error(`[FetchData] ${context}`, error);
-      return throwError(() => new Error(context));
+      console.error(`[FetchData] Falha em "${resource}"`, error);
+      return throwError(() => new Error(`Não foi possível completar a operação em "${resource}".`));
     };
   }
 }

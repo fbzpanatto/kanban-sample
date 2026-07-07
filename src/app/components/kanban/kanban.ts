@@ -4,10 +4,10 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { FetchData } from '../../services/fetch-data';
-import { Stage, Student } from '../../interface/interfaces';
+import { Stage, Student, UpdateStagePayload } from '../../interface/interfaces';
 import { StudentCard } from '../student-card/student-card';
-import { Filters } from "../filters/filters";
-import { Router } from "@angular/router";
+import { Filters } from '../filters/filters';
+import { Router } from '@angular/router';
 
 interface ColumnViewModel { stage: Stage, students: Student[] }
 
@@ -24,6 +24,14 @@ export class KanbanBoardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly kanbanService = inject(FetchData);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Resources consumidos por este componente. Centralizados aqui para
+   * facilitar manutenção caso o endpoint mude, e para o KanbanMock ter
+   * um alvo confiável para casar via string.
+   */
+  private readonly stagesResource = '/kanban/stages';
+  private readonly studentsResource = '/kanban/students';
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
@@ -48,12 +56,14 @@ export class KanbanBoardComponent implements OnInit {
         debounceTime(400),
         distinctUntilChanged(),
         switchMap((term) =>
-          this.kanbanService.searchStudents(term).pipe(
-            catchError(() => {
-              this.errorMessage.set('Não foi possível buscar os alunos.');
-              return of<Student[]>([]);
-            })
-          )
+          this.kanbanService
+            .getAll<Student>(this.studentsResource, term ? [{ search: term }] : undefined)
+            .pipe(
+              catchError(() => {
+                this.errorMessage.set('Não foi possível buscar os alunos.');
+                return of<Student[]>([]);
+              })
+            )
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -110,8 +120,10 @@ export class KanbanBoardComponent implements OnInit {
     const previousStageId = student.stageId;
     student.stageId = targetStage.id;
 
+    const payload: UpdateStagePayload = { newStageId: targetStage.id };
+
     this.kanbanService
-      .updateStudentStage({ studentId: student.id, newStageId: targetStage.id })
+      .putById<void>(this.studentsResource, student.id, payload, 'stage')
       .subscribe({
         error: () => {
           student.stageId = previousStageId;
@@ -144,7 +156,7 @@ export class KanbanBoardComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.kanbanService.getStages().subscribe({
+    this.kanbanService.getAll<Stage>(this.stagesResource).subscribe({
       next: (stages) => this.loadStudents(stages),
       error: () => {
         this.errorMessage.set('Não foi possível carregar as etapas do quadro.');
@@ -154,7 +166,7 @@ export class KanbanBoardComponent implements OnInit {
   }
 
   private loadStudents(stages: Stage[]): void {
-    this.kanbanService.getStudents().subscribe({
+    this.kanbanService.getAll<Student>(this.studentsResource).subscribe({
       next: (students) => {
         const sortedStages = [...stages].sort((a, b) => a.order - b.order);
 
