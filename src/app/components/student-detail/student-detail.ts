@@ -15,15 +15,17 @@ export class StudentDetails implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   // Estado da aba selecionada
-  protected readonly activeTab = signal<string>('dados');
+  protected readonly activeTab = signal<{ id: number, label: string }>({ id: 1, label: 'Atividades'});
 
   // Abas genéricas para o protótipo
   protected readonly tabs = [
-    { id: 'dados', label: 'Dados Cadastrais' },
-    { id: 'pecas', label: 'Peças da Coleção' },
-    { id: 'validacao', label: 'Validação' },
-    { id: 'historico', label: 'Histórico' },
-    { id: 'anexos', label: 'Modelos de Referência' }
+    { id: 1, label: 'Atividades' },
+    { id: 2, label: 'Contato' },
+    { id: 3, label: 'Empresa' },
+    { id: 4, label: 'Negócio' },
+    { id: 5, label: 'Conversas' },
+    { id: 6, label: 'Arquivos' },
+    { id: 7, label: 'Histórico' }
   ];
 
   // Armazena o ID do aluno lido da rota
@@ -45,7 +47,7 @@ export class StudentDetails implements OnInit {
     this.router.navigate(['/']); // Retorna ao quadro Kanban
   }
 
-  protected setTab(tabId: string): void {
-    this.activeTab.set(tabId);
+  protected setTab(tab: { id: number, label: string }): void {
+    this.activeTab.set(tab);
   }
 }

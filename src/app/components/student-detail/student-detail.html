@@ -37,8 +37,8 @@
           <button
             type="button"
             class="details-page__tab-btn"
-            [class.active]="activeTab() === tab.id"
-            (click)="setTab(tab.id)"
+            [class.active]="activeTab().id === tab.id"
+            (click)="setTab(tab)"
           >
             {{ tab.label }}
           </button>
@@ -46,33 +46,11 @@
       </nav>
 
       <div class="details-page__content">
-        @switch (activeTab()) {
-          @case ('dados') {
-            <div class="generic-panel">
-              <h3>Dados Cadastrais</h3>
-              <p>Formulário de endereço, dados de cobrança, etc.</p>
-            </div>
-          }
-          @case ('pecas') {
-            <div class="generic-panel">
-              <h3>Peças em Produção</h3>
-              <p>Galeria para upload das fotos das roupas feitas pelo aluno.</p>
-            </div>
-          }
-          @case ('validacao') {
-            <div class="generic-panel">
-              <h3>Área de Validação</h3>
-              <p>Comparação com fotos do modelo original e botão de aprovação.</p>
-            </div>
-          }
-          @default {
-            <div class="generic-panel">
-              <h3>{{ activeTab() }}</h3>
-              <p>Conteúdo em construção...</p>
-            </div>
-          }
-        }
+        <div class="generic-panel">
+          <h3>{{ activeTab().label }}</h3>
+        </div>
       </div>
+
     </main>
   </div>
 </section>

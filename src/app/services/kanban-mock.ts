@@ -27,10 +27,10 @@ export class KanbanMock {
   private readonly SIMULATED_LATENCY_MS = 400;
 
   private readonly mockStages: Stage[] = [
-    { id: 1, name: 'Inscrito', order: 1 },
-    { id: 2, name: 'Em Treinamento', order: 2 },
-    { id: 3, name: 'Peça em Produção', order: 3 },
-    { id: 4, name: 'Em Validação', order: 4 },
+    { id: 1, name: '1ª Call', order: 1 },
+    { id: 2, name: 'Negociação', order: 2 },
+    { id: 3, name: 'Proposta', order: 3 },
+    { id: 4, name: 'Aguardando Pagamento', order: 4 },
     { id: 5, name: 'Concluído', order: 5 }
   ];
 
