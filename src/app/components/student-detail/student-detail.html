@@ -46,11 +46,152 @@
       </nav>
 
       <div class="details-page__content">
-        <div class="generic-panel">
-          <h3>{{ activeTab().label }}</h3>
-        </div>
-      </div>
+        @if (activeTab().id === 1) {
+          <div class="activities-tab">
+            <!-- Timeline de etapas -->
+            <div class="stage-timeline">
+              <button
+                type="button"
+                class="stage-timeline__nav"
+                (click)="scrollTimeline(-1)"
+                aria-label="Etapas anteriores"
+              >
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                  <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+              </button>
 
+              <div class="stage-timeline__track" #timelineTrack>
+                @for (stage of stages(); track stage.id; let last = $last) {
+                  <div
+                    class="stage-timeline__step"
+                    [class.stage-timeline__step--done]="isStageDone(stage)"
+                    [class.stage-timeline__step--active]="isStageActive(stage)"
+                  >
+                    <span class="stage-timeline__dot">{{ stage.order }}</span>
+                    <span class="stage-timeline__label">{{ stage.name }}</span>
+                  </div>
+
+                  @if (!last) {
+                    <div
+                      class="stage-timeline__connector"
+                      [class.stage-timeline__connector--done]="isStageDone(stage)"
+                    ></div>
+                  }
+                } @empty {
+                  <p class="stage-timeline__empty">Carregando etapas...</p>
+                }
+              </div>
+
+              <button
+                type="button"
+                class="stage-timeline__nav"
+                (click)="scrollTimeline(1)"
+                aria-label="Próximas etapas"
+              >
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                  <path d="M9 18l6-6-6-6"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Atividades (esqueleto) + Mensagens -->
+            <div class="activities-tab__panels">
+              <section class="activities-panel">
+                <header class="activities-panel__header">
+                  <span class="activities-panel__col activities-panel__col--day">Dias</span>
+                  <span class="activities-panel__col activities-panel__col--date">Data</span>
+                  <span class="activities-panel__col activities-panel__col--desc">Atividade</span>
+                  <span class="activities-panel__col activities-panel__col--done">Concluído</span>
+                </header>
+
+                <div class="activities-panel__body">
+                  @for (activity of skeletonActivities; track activity.id) {
+                    <div class="activities-panel__row">
+                      <span class="activities-panel__col activities-panel__col--day">{{ activity.day }}</span>
+                      <span class="activities-panel__col activities-panel__col--date">{{ activity.date }}</span>
+                      <span class="activities-panel__col activities-panel__col--desc">{{ activity.description }}</span>
+                      <span class="activities-panel__col activities-panel__col--done">
+                        <input type="checkbox" [checked]="activity.done" disabled />
+                      </span>
+                    </div>
+                  } @empty {
+                    <p class="activities-panel__empty">Nenhuma atividade cadastrada</p>
+                  }
+                </div>
+              </section>
+
+              <section class="proposal-panel">
+                <header class="proposal-panel__header">
+                  <h3>Apresentação Proposta</h3>
+                </header>
+
+                <div class="proposal-panel__messages">
+                  @for (message of messages(); track message.id) {
+                    <article class="proposal-message">
+                      <span class="proposal-message__type-icon">T</span>
+                      <p class="proposal-message__text">{{ message.text }}</p>
+                      <time class="proposal-message__time">{{ message.createdAt | date: 'dd/MM HH:mm' }}</time>
+                    </article>
+                  } @empty {
+                    <p class="proposal-panel__empty">
+                      Você ainda não adicionou nenhuma mensagem de texto para enviar.
+                    </p>
+                  }
+                </div>
+
+                <button type="button" class="proposal-panel__edit-trigger" (click)="openMessageModal()">
+                  Clique aqui para editar...
+                </button>
+              </section>
+            </div>
+          </div>
+        } @else {
+          <div class="generic-panel">
+            <h3>{{ activeTab().label }}</h3>
+          </div>
+        }
+      </div>
     </main>
   </div>
 </section>
+
+@if (isMessageModalOpen()) {
+  <div class="modal-overlay" (click)="closeMessageModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <h3>Editar mensagem</h3>
+        <button type="button" class="modal__close-btn" (click)="closeMessageModal()" aria-label="Fechar">
+          &times;
+        </button>
+      </header>
+
+      <div class="modal__body">
+        <p class="modal__hint">
+          Mensagem que será enviada. Se for a primeira mensagem para o contato,
+          ou estiver fora da janela de 24 horas, esta é a mensagem utilizada.
+        </p>
+        <textarea
+          class="modal__textarea"
+          rows="4"
+          placeholder="Escreva uma mensagem, você pode adicionar mais de uma"
+          [formControl]="messageControl"
+        ></textarea>
+      </div>
+
+      <footer class="modal__footer">
+        <button type="button" class="modal__btn modal__btn--ghost" (click)="closeMessageModal()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="modal__btn modal__btn--primary"
+          [disabled]="!messageControl.value.trim()"
+          (click)="confirmMessage()"
+        >
+          Confirmar
+        </button>
+      </footer>
+    </div>
+  </div>
+}
