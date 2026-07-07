@@ -14,6 +14,9 @@
 
 html, body {
   height: 100%;
+  overflow-x: hidden; // trava de segurança final: mesmo se algum componente
+  // futuro esquecer o próprio overflow interno, a
+  // página nunca mostra scrollbar horizontal do browser
 }
 
 body {
