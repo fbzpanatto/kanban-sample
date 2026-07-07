@@ -35,7 +35,7 @@ export class StudentDetails implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fetchData = inject(FetchData);
 
-  private readonly stagesResource = '/kanban/stages';
+  private readonly stagesResource = '/stages';
 
   // Estado da aba selecionada
   protected readonly activeTab = signal<{ id: number; label: string }>({ id: 1, label: 'Atividades' });
@@ -95,7 +95,7 @@ export class StudentDetails implements OnInit {
         const id = params.get('id');
         this.studentId.set(id);
 
-        // Futuramente: this.fetchData.getOne<Student>('/kanban/students', id)
+        // Futuramente: this.fetchData.getOne<Student>('/students', id)
       });
 
     this.loadStages();

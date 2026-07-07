@@ -30,8 +30,8 @@ export class KanbanBoardComponent implements OnInit {
    * facilitar manutenção caso o endpoint mude, e para o KanbanMock ter
    * um alvo confiável para casar via string.
    */
-  private readonly stagesResource = '/kanban/stages';
-  private readonly studentsResource = '/kanban/students';
+  private readonly stagesResource = '/stages';
+  private readonly studentsResource = '/students';
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
