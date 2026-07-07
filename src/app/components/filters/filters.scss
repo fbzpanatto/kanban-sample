@@ -4,11 +4,6 @@
   display: block;
 }
 
-.kanban-toolbar {
-  flex-shrink: 0;
-  margin-bottom: 16px;
-}
-
 .kanban-toolbar__filters {
   display: flex;
   align-items: center;
@@ -63,5 +58,32 @@
   &:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+}
+
+// ============================================================
+// Breakpoint mobile (<768px)
+// ============================================================
+//
+// Bug real que isso corrige: `.kanban-toolbar__search` tem
+// `min-width: 260px` fixo. Numa tela de ~360-375px de largura, isso
+// sozinho (mais o gap e os botões de filtro ao lado) força o
+// `.kanban-toolbar__filters` a ficar mais largo que a viewport —
+// mesmo com `flex-wrap: wrap`, o item individual não pode encolher
+// abaixo do próprio min-width, então ele "empurra" a barra pra fora
+// da tela em vez de quebrar linha corretamente.
+@media (max-width: 768px) {
+  .kanban-toolbar__search {
+    min-width: 0; // permite encolher; sem isso, overflow horizontal garantido
+    flex: 1 1 100%; // ocupa a linha inteira sozinho, sem competir com os botões
+  }
+
+  .kanban-toolbar__filters {
+    gap: 8px;
+  }
+
+  .kanban-toolbar__filter-btn {
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }

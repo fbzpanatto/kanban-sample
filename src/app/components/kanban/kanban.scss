@@ -25,68 +25,15 @@
   flex-shrink: 0;
 }
 
-// --- Toolbar: busca + filtros visuais + totalizador ---
+// --- Toolbar: wrapper + totalizador. A busca e os botões de filtro
+// vivem dentro do <app-kanban-filters> (ver filters.scss) — por causa
+// do View Encapsulation do Angular, seletores escritos aqui não
+// alcançariam aqueles elementos mesmo que tivessem o mesmo nome de
+// classe, então não faz sentido duplicá-los aqui.
 
 .kanban-toolbar {
   flex-shrink: 0; // nunca deixa a toolbar encolher e "roubar" espaço das colunas
   margin-bottom: 16px;
-}
-
-.kanban-toolbar__filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.kanban-toolbar__search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 8px 12px;
-  min-width: 260px;
-  flex: 1 1 260px;
-}
-
-.kanban-toolbar__search-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--color-ink-soft);
-  flex-shrink: 0;
-}
-
-.kanban-toolbar__search-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 13px;
-  color: var(--color-ink);
-  width: 100%;
-
-  &::placeholder {
-    color: var(--color-ink-soft);
-  }
-}
-
-.kanban-toolbar__filter-btn {
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  color: var(--color-ink-soft);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-
-  &:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-  }
 }
 
 .kanban-toolbar__summary {
@@ -171,3 +118,57 @@
 // Estilos do cartão do aluno (.student-card e derivados) foram movidos
 // para student-card.component.scss — o board agora só cuida do layout
 // das colunas, não da aparência do cartão em si.
+
+// ============================================================
+// Breakpoint mobile (<768px)
+// ============================================================
+//
+// Diferente do student-detail, aqui NÃO empilhamos as colunas
+// verticalmente — isso quebraria a metáfora do Kanban (um fluxo
+// horizontal de etapas). Em vez disso, usamos o padrão consagrado em
+// apps de Kanban mobile (Trello, Linear): scroll horizontal com
+// "snap", cada coluna ocupando quase a tela toda, com uma pequena
+// espiadinha da próxima — sinaliza visualmente que há mais conteúdo
+// pra rolar. Cada coluna mantém seu próprio scroll vertical interno,
+// igual ao desktop.
+@media (max-width: 768px) {
+  .kanban-board {
+    padding: 12px;
+  }
+
+  .kanban-toolbar {
+    margin-bottom: 12px;
+  }
+
+  .kanban-toolbar__summary {
+    margin-top: 8px;
+  }
+
+  .kanban-board__columns {
+    gap: 12px;
+
+    // scroll-snap-type + scroll-snap-align (na coluna, abaixo) fazem o
+    // navegador "encaixar" a coluna na borda da viewport ao soltar o
+    // dedo — em vez de parar em qualquer posição intermediária.
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; // rolagem por inércia no iOS
+  }
+
+  .kanban-column {
+    // Cada coluna ocupa quase a largura toda da tela (88vw), com ~12%
+    // de "espiadinha" da próxima coluna — comunica visualmente que dá
+    // pra deslizar pra ver mais etapas, sem precisar de nenhuma seta
+    // ou indicador extra.
+    min-width: 88vw;
+    max-width: 88vw;
+    scroll-snap-align: start;
+  }
+
+  .kanban-column__header {
+    padding: 12px 14px;
+  }
+
+  .kanban-column__list {
+    padding: 10px;
+  }
+}
