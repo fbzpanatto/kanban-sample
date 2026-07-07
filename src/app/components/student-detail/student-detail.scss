@@ -185,3 +185,98 @@
   h3 { color: var(--color-ink); margin-top: 0; }
   p { color: var(--color-ink-soft); }
 }
+
+// ============================================================
+// Breakpoint mobile (<768px): layout em uma coluna
+// ============================================================
+//
+// No desktop temos DUAS áreas de scroll independentes (sidebar e
+// conteúdo). No mobile, isso vira uma fonte clássica de bug de "scroll
+// aninhado" em touch (o dedo às vezes rola a área errada, ou o scroll
+// trava — comum no Safari iOS). Por isso, aqui embaixo, unificamos tudo
+// em UMA única área rolável: a página inteira, empilhada verticalmente
+// (sidebar → abas → conteúdo).
+@media (max-width: 768px) {
+  .details-page__body {
+    flex-direction: column;
+    overflow-y: auto; // única rolagem do mobile: a "página" toda
+    overflow-x: hidden;
+  }
+
+  .details-page__sidebar {
+    width: 100%;
+    flex-shrink: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 20px;
+
+    // No desktop a sidebar tem scroll próprio (overflow-y: auto).
+    // No mobile isso é removido: quem rola agora é o .details-page__body
+    // como um todo, então a sidebar só precisa da altura do seu conteúdo.
+    overflow-y: visible;
+
+    // No desktop os itens ficam empilhados verticalmente (avatar em
+    // cima, nome embaixo). No mobile, colocar lado a lado economiza
+    // espaço vertical, que é mais escasso numa tela de celular.
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .details-page__avatar-placeholder {
+    margin-bottom: 0; // não precisa mais do espaçamento vertical do layout empilhado
+    flex-shrink: 0;
+  }
+
+  .details-page__name,
+  .details-page__meta {
+    margin: 0;
+  }
+
+  // O bloco de telefone/email empilhado horizontalmente ao lado do avatar
+  // ficaria apertado demais — escondido no mobile por ora. Alternativa,
+  // se preferir manter visível: mova para dentro da aba "Dados Cadastrais"
+  // em vez do cabeçalho da sidebar.
+  .details-page__sidebar-info {
+    display: none;
+  }
+
+  .details-page__main {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    // No desktop, o scroll vertical do conteúdo é contido aqui dentro
+    // (.details-page__content tinha overflow: auto). No mobile, deixamos
+    // "vazar" de propósito — é o .details-page__body que rola agora.
+    overflow: visible;
+  }
+
+  .details-page__tabs {
+    padding: 0 16px; // 32px de padding é excessivo numa tela de ~360-400px
+  }
+
+  .details-page__content {
+    padding: 16px;
+    overflow-y: visible; // rolagem vertical delegada ao .details-page__body
+    overflow-x: auto;    // mantém rolagem horizontal própria, por segurança
+  }
+
+  .generic-panel {
+    // No desktop, min-width: max-content deixa o placeholder do tamanho
+    // do próprio texto. No mobile, isso forçaria o card a ficar mais
+    // largo que a tela — aqui ele simplesmente ocupa a largura disponível
+    // e o texto quebra linha normalmente.
+    min-width: 0;
+    padding: 20px;
+  }
+
+  // Pouco espaço no header mobile; a breadcrumb é informação secundária
+  // frente ao botão "Voltar", que é a ação principal de navegação.
+  .details-page__breadcrumb {
+    display: none;
+  }
+
+  .details-page__header {
+    padding: 12px 16px;
+  }
+}
