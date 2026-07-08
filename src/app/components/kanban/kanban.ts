@@ -59,8 +59,8 @@ export class KanbanBoardComponent implements OnInit {
           this.kanbanService
             .getAll<Student>(this.studentsResource, term ? [{ search: term }] : undefined)
             .pipe(
-              catchError(() => {
-                this.errorMessage.set('Não foi possível buscar os alunos.');
+              catchError((error: unknown) => {
+                this.errorMessage.set(this.toErrorMessage(error, 'Não foi possível buscar os alunos.'));
                 return of<Student[]>([]);
               })
             )
@@ -79,6 +79,17 @@ export class KanbanBoardComponent implements OnInit {
         students: students.filter((student) => student.stageId === stage.id)
       }))
     );
+  }
+
+  /**
+   * Extrai a mensagem de um erro propagado pelo FetchData (sempre um
+   * Error com .message já classificado como businessError/systemError/
+   * fallback genérico — ver FetchData.handleError). O fallback aqui só
+   * cobre o caso raro de algo que não seja um Error chegar até este
+   * ponto (ex: um erro síncrono inesperado fora do fluxo HTTP normal).
+   */
+  private toErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error ? error.message : fallback;
   }
 
   protected getColumnListId(stageId: number): string {
@@ -126,10 +137,15 @@ export class KanbanBoardComponent implements OnInit {
     this.kanbanService
       .putById<void>(this.studentsResource, student.id, payload, 'stage')
       .subscribe({
-        error: () => {
+        error: (error: Error) => {
           student.stageId = previousStageId;
           this.revertStudentToPreviousColumn(student, previousStageId, targetStage.id);
-          this.errorMessage.set('Não foi possível mover o aluno. A alteração foi desfeita.');
+
+          // Reaproveita a mensagem que o FetchData já classificou
+          // (texto específico do businessError, ou o genérico do
+          // systemError) — evita inventar uma nova mensagem aqui que
+          // duplicaria essa decisão.
+          this.errorMessage.set(error.message);
         }
       });
   }
@@ -170,7 +186,7 @@ export class KanbanBoardComponent implements OnInit {
       stages = await firstValueFrom(this.kanbanService.getAll<Stage>(this.stagesResource));
     } catch (error) {
       console.error('[KanbanBoardComponent] Falha ao carregar etapas', error);
-      this.errorMessage.set('Não foi possível carregar as etapas do quadro.');
+      this.errorMessage.set(this.toErrorMessage(error, 'Não foi possível carregar as etapas do quadro.'));
       this.loading.set(false);
       return;
     }
@@ -181,7 +197,7 @@ export class KanbanBoardComponent implements OnInit {
       students = await firstValueFrom(this.kanbanService.getAll<Student>(this.studentsResource));
     } catch (error) {
       console.error('[KanbanBoardComponent] Falha ao carregar alunos', error);
-      this.errorMessage.set('Não foi possível carregar os alunos.');
+      this.errorMessage.set(this.toErrorMessage(error, 'Não foi possível carregar os alunos.'));
       this.loading.set(false);
       return;
     }
