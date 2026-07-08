@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, firstValueFrom, of, switchMap } from 'rxjs';
 import { FetchData } from '../../services/fetch-data';
 import { Stage, Student, UpdateStagePayload } from '../../interface/interfaces';
 import { StudentCard } from '../student-card/student-card';
@@ -46,7 +46,7 @@ export class KanbanBoardComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.loadBoard();
+    void this.loadBoard();
     this.watchSearchTerm();
   }
 
@@ -96,19 +96,20 @@ export class KanbanBoardComponent implements OnInit {
   protected onDrop(event: CdkDragDrop<Student[]>, targetStage: Stage): void {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      const student = event.previousContainer.data[event.previousIndex];
-
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex
-      );
-
-      this.persistStageChange(student, targetStage);
+      this.columns.set([...this.columns()]);
+      return;
     }
 
+    const student = event.previousContainer.data[event.previousIndex];
+
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex
+    );
+
+    this.persistStageChange(student, targetStage);
     this.columns.set([...this.columns()]);
   }
 
@@ -152,37 +153,48 @@ export class KanbanBoardComponent implements OnInit {
     this.columns.set([...columns]);
   }
 
-  private loadBoard(): void {
+  /**
+   * Carrega etapas e alunos sequencialmente, usando await em vez de
+   * encadear subscribes (next chamando outro método que faz outro
+   * subscribe). Cada chamada continua com sua própria mensagem de erro
+   * específica — não perdemos granularidade, só ganhamos legibilidade:
+   * dá pra seguir o fluxo de cima pra baixo, sem pular entre métodos.
+   */
+  private async loadBoard(): Promise<void> {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.kanbanService.getAll<Stage>(this.stagesResource).subscribe({
-      next: (stages) => this.loadStudents(stages),
-      error: () => {
-        this.errorMessage.set('Não foi possível carregar as etapas do quadro.');
-        this.loading.set(false);
-      }
-    });
-  }
+    let stages: Stage[];
 
-  private loadStudents(stages: Stage[]): void {
-    this.kanbanService.getAll<Student>(this.studentsResource).subscribe({
-      next: (students) => {
-        const sortedStages = [...stages].sort((a, b) => a.order - b.order);
+    try {
+      stages = await firstValueFrom(this.kanbanService.getAll<Stage>(this.stagesResource));
+    } catch (error) {
+      console.error('[KanbanBoardComponent] Falha ao carregar etapas', error);
+      this.errorMessage.set('Não foi possível carregar as etapas do quadro.');
+      this.loading.set(false);
+      return;
+    }
 
-        this.columns.set(
-          sortedStages.map((stage) => ({
-            stage,
-            students: students.filter((student) => student.stageId === stage.id)
-          }))
-        );
-        this.totalStudentsCount.set(students.length);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set('Não foi possível carregar os alunos.');
-        this.loading.set(false);
-      }
-    });
+    let students: Student[];
+
+    try {
+      students = await firstValueFrom(this.kanbanService.getAll<Student>(this.studentsResource));
+    } catch (error) {
+      console.error('[KanbanBoardComponent] Falha ao carregar alunos', error);
+      this.errorMessage.set('Não foi possível carregar os alunos.');
+      this.loading.set(false);
+      return;
+    }
+
+    const sortedStages = [...stages].sort((a, b) => a.order - b.order);
+
+    this.columns.set(
+      sortedStages.map((stage) => ({
+        stage,
+        students: students.filter((student) => student.stageId === stage.id)
+      }))
+    );
+    this.totalStudentsCount.set(students.length);
+    this.loading.set(false);
   }
 }

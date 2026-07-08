@@ -1,0 +1,22 @@
+@if (errorDialogService.message(); as message) {
+  <div class="modal-overlay" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <h3>Não foi possível continuar</h3>
+        <button type="button" class="modal__close-btn" (click)="close()" aria-label="Fechar">
+          &times;
+        </button>
+      </header>
+
+      <div class="modal__body">
+        <p class="modal__message">{{ message }}</p>
+      </div>
+
+      <footer class="modal__footer">
+        <button type="button" class="modal__btn modal__btn--primary" (click)="close()">
+          Entendi
+        </button>
+      </footer>
+    </div>
+  </div>
+}

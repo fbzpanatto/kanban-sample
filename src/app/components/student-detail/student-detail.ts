@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -61,7 +62,7 @@ export class StudentDetails implements OnInit {
   /**
    * Etapa atual do aluno. Por ora, hardcoded — igual ao "Nome do Aluno"
    * placeholder que já existe na sidebar. Quando o componente passar a
-   * buscar o aluno real (this.fetchData.getOne<Student>('/kanban/students', id)),
+   * buscar o aluno real (this.fetchData.getOne<Student>('/students', id)),
    * troque por student.stageId.
    */
   protected readonly currentStageId = signal<number>(3);
@@ -98,7 +99,7 @@ export class StudentDetails implements OnInit {
         // Futuramente: this.fetchData.getOne<Student>('/students', id)
       });
 
-    this.loadStages();
+    void this.loadStages();
   }
 
   protected goBack(): void {
@@ -159,15 +160,18 @@ export class StudentDetails implements OnInit {
 
   /**
    * Busca as etapas para montar a timeline. Reaproveita o MESMO resource
-   * do Kanban ('/kanban/stages') via FetchData genérico — é o mesmo dado,
-   * só exibido de outra forma aqui. Se falhar, a timeline fica vazia mas
-   * o resto da tela (mensagens, tabela de atividades) continua funcional.
+   * do Kanban ('/stages') via FetchData genérico — é o mesmo dado, só
+   * exibido de outra forma aqui. Se falhar, a timeline fica vazia mas
+   * o resto da tela (mensagens, tabela de atividades) continua funcional
+   * — por isso não propagamos o erro, só logamos e retornamos.
    */
-  private loadStages(): void {
-    this.fetchData.getAll<Stage>(this.stagesResource).subscribe({
-      next: (stages) => this.stages.set([...stages].sort((a, b) => a.order - b.order)),
-      error: (error) => console.error('[StudentDetails] Não foi possível carregar as etapas.', error)
-    });
+  private async loadStages(): Promise<void> {
+    try {
+      const stages = await firstValueFrom(this.fetchData.getAll<Stage>(this.stagesResource));
+      this.stages.set([...stages].sort((a, b) => a.order - b.order));
+    } catch (error) {
+      console.error('[StudentDetails] Não foi possível carregar as etapas.', error);
+    }
   }
 
   protected isStageDone(stage: Stage): boolean {

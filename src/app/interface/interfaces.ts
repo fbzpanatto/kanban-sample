@@ -1,16 +1,43 @@
 /**
- * Envelope padrão de resposta da API. Toda resposta deve trazer os dados
- * dentro de `data` — isso permite que o FetchData trate qualquer resource
- * de forma genérica, sem conhecer a forma exata de cada payload.
+ * As 3 formas possíveis de resposta da API — toda resposta sempre tem
+ * `status`, e se diferenciam pela chave adicional presente:
  *
- * No backend Express, isso significa que TODO endpoint (não só os do
- * Kanban) deve responder no formato:
- *   { "data": [...] }  ou  { "data": {...} }
- * em vez de devolver o array/objeto cru direto.
+ * - `data`          → sucesso
+ * - `businessError` → regra de negócio prevista (ex: "aluno não encontrado",
+ *                      futuramente "email já em uso") — o backend detectou
+ *                      isso DENTRO do try, de propósito.
+ * - `systemError`   → algo fugiu do controle (banco fora do ar, exceção não
+ *                      tratada) — sempre vem do catch genérico do controller.
+ *
+ * O FetchData usa essas 3 formas para decidir automaticamente o que fazer
+ * com cada erro (ver handleError), sem que cada componente precise saber
+ * a diferença.
  */
-export interface ApiEnvelope<T> {
+export interface ApiSuccess<T> {
+  status: number;
   data: T;
-  error?: { message: string } | null;
+}
+
+export interface ApiBusinessError {
+  status: number;
+  businessError: string;
+}
+
+export interface ApiSystemError {
+  status: number;
+  systemError: string;
+}
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiBusinessError | ApiSystemError;
+
+/** Type guard: response é o formato de erro de negócio? */
+export function isBusinessError(response: unknown): response is ApiBusinessError {
+  return typeof response === 'object' && response !== null && 'businessError' in response;
+}
+
+/** Type guard: response é o formato de erro de sistema? */
+export function isSystemError(response: unknown): response is ApiSystemError {
+  return typeof response === 'object' && response !== null && 'systemError' in response;
 }
 
 /**
