@@ -104,21 +104,21 @@
             <div class="activities-tab__panels">
               <section class="activities-panel">
                 <header class="activities-panel__header">
+                  <span class="activities-panel__col activities-panel__col--done">Concluído</span>
                   <span class="activities-panel__col activities-panel__col--day">Dias</span>
                   <span class="activities-panel__col activities-panel__col--date">Data</span>
                   <span class="activities-panel__col activities-panel__col--desc">Atividade</span>
-                  <span class="activities-panel__col activities-panel__col--done">Concluído</span>
                 </header>
 
                 <div class="activities-panel__body">
                   @for (activity of skeletonActivities; track activity.id) {
                     <div class="activities-panel__row">
-                      <span class="activities-panel__col activities-panel__col--day">{{ activity.day }}</span>
-                      <span class="activities-panel__col activities-panel__col--date">{{ activity.date }}</span>
-                      <span class="activities-panel__col activities-panel__col--desc">{{ activity.description }}</span>
                       <span class="activities-panel__col activities-panel__col--done">
                         <input type="checkbox" [checked]="activity.done" disabled />
                       </span>
+                      <span class="activities-panel__col activities-panel__col--day">{{ activity.day }}</span>
+                      <span class="activities-panel__col activities-panel__col--date">{{ activity.date }}</span>
+                      <span class="activities-panel__col activities-panel__col--desc">{{ activity.description }}</span>
                     </div>
                   } @empty {
                     <p class="activities-panel__empty">Nenhuma atividade cadastrada</p>

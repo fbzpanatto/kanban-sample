@@ -330,7 +330,7 @@
 .activities-panel__header,
 .activities-panel__row {
   display: grid;
-  grid-template-columns: 50px 60px 1fr 80px;
+  grid-template-columns: 80px 50px 60px 1fr;
   gap: 8px;
   padding: 10px 16px;
   align-items: center;
@@ -397,7 +397,7 @@
 
 .proposal-message {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   background-color: var(--color-canvas);
   border-radius: 10px;
