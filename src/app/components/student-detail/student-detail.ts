@@ -5,8 +5,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FetchData } from '../../services/fetch-data';
-import { ProposalMessage, Stage } from '../../interface/interfaces';
+import { ProposalMessage, Stage, Student } from '../../interface/interfaces';
 
+/**
+ * Linha "esqueleto" (só visual, sem dado real) da tabela de atividades.
+ * Fica local ao componente de propósito: diferente de Stage/ProposalMessage,
+ * isso não representa um modelo de domínio que virá da API — é conteúdo
+ * de preenchimento visual, então não faz sentido "sujar" o interfaces.ts
+ * compartilhado com um tipo que não é real ainda.
+ */
 interface SkeletonActivityRow {
   id: number;
   day: number;
@@ -30,6 +37,7 @@ export class StudentDetails implements OnInit {
   private readonly fetchData = inject(FetchData);
 
   private readonly stagesResource = '/stages';
+  private readonly studentsResource = '/students';
 
   // Estado da aba selecionada
   protected readonly activeTab = signal<{ id: number; label: string }>({ id: 1, label: 'Atividades' });
@@ -48,17 +56,27 @@ export class StudentDetails implements OnInit {
   // Armazena o ID do aluno lido da rota
   protected readonly studentId = signal<string | null>(null);
 
+  // --- Aluno real (buscado pela rota) ---
+
+  protected readonly student = signal<Student | null>(null);
+
   // --- Timeline de etapas ---
 
   protected readonly stages = signal<Stage[]>([]);
 
   /**
-   * Etapa atual do aluno. Por ora, hardcoded — igual ao "Nome do Aluno"
-   * placeholder que já existe na sidebar. Quando o componente passar a
-   * buscar o aluno real (this.fetchData.getOne<Student>('/students', id)),
-   * troque por student.stageId.
+   * Etapa atual do aluno — agora derivada do aluno real carregado via
+   * FetchData.getOne, em vez do valor fixo que tínhamos antes. Enquanto
+   * o aluno ainda não carregou, cai em 0 (nenhuma etapa da timeline bate
+   * com 0, então nada fica marcado como ativo — estado neutro, não um
+   * "estágio 3" enganoso).
    */
-  protected readonly currentStageId = signal<number>(3);
+  protected readonly currentStageId = computed(() => this.student()?.stageId ?? 0);
+
+  protected readonly currentStageName = computed(() => {
+    const stage = this.stages().find((s) => s.id === this.currentStageId());
+    return stage?.name ?? '';
+  });
 
   private readonly currentStageOrder = computed(() => {
     const current = this.stages().find((stage) => stage.id === this.currentStageId());
@@ -89,7 +107,9 @@ export class StudentDetails implements OnInit {
         const id = params.get('id');
         this.studentId.set(id);
 
-        // Futuramente: this.fetchData.getOne<Student>('/students', id)
+        if (id) {
+          void this.loadStudent(id);
+        }
       });
 
     void this.loadStages();
@@ -149,6 +169,22 @@ export class StudentDetails implements OnInit {
     // Mais recente primeiro
     this.messages.set([newMessage, ...this.messages()]);
     this.closeMessageModal();
+  }
+
+  /**
+   * Busca o aluno real pela rota. Se falhar (ex: 404 "Aluno não
+   * encontrado" — que já é um businessError vindo do backend), o
+   * FetchData já abre o modal global sozinho (ver ErrorDialogService);
+   * aqui só logamos pra debug e deixamos o resto da tela com os
+   * placeholders (nome vazio, timeline sem etapa ativa) em vez de travar.
+   */
+  private async loadStudent(id: string): Promise<void> {
+    try {
+      const student = await firstValueFrom(this.fetchData.getOne<Student>(this.studentsResource, id));
+      this.student.set(student);
+    } catch (error) {
+      console.error('[StudentDetails] Não foi possível carregar o aluno.', error);
+    }
   }
 
   /**

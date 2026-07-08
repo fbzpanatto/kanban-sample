@@ -16,8 +16,13 @@
       <div class="details-page__avatar-placeholder">
         <span>Avatar</span>
       </div>
-      <h2 class="details-page__name">Nome do Aluno</h2>
-      <p class="details-page__meta">Turma A • Em Produção</p>
+      <h2 class="details-page__name">{{ student()?.name ?? 'Carregando...' }}</h2>
+      <p class="details-page__meta">
+        {{ student()?.className }}
+        @if (currentStageName()) {
+          • {{ currentStageName() }}
+        }
+      </p>
 
       <div class="details-page__sidebar-info">
         <div class="info-group">
