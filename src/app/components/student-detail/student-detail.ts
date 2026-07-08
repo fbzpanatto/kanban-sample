@@ -7,13 +7,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FetchData } from '../../services/fetch-data';
 import { ProposalMessage, Stage } from '../../interface/interfaces';
 
-/**
- * Linha "esqueleto" (só visual, sem dado real) da tabela de atividades.
- * Fica local ao componente de propósito: diferente de Stage/ProposalMessage,
- * isso não representa um modelo de domínio que virá da API — é conteúdo
- * de preenchimento visual, então não faz sentido "sujar" o interfaces.ts
- * compartilhado com um tipo que não é real ainda.
- */
 interface SkeletonActivityRow {
   id: number;
   day: number;
